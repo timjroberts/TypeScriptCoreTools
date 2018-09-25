@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts/**/*" />
+  </ItemGroup>
+
+  <Target Name="RestoreNodeModules" AfterTargets="_GenerateProjectRestoreGraph" Condition="!Exists('$(MSBuildThisFileDirectory)/TypeScript/node_modules')">
+    <Exec Command="npm install --no-save" WorkingDirectory="$(MSBuildThisFileDirectory)/TypeScript" />
+  </Target>
+
+  <Target Name="CompileTypeScript" BeforeTargets="BeforeBuild">
+    <Exec Command="tsc $(MSBuildProjectDirectory)/TypeScript/Bios.ts --outDir Scripts --removeComments --lib ES2015" />
+    <Exec Command="tsc $(MSBuildProjectDirectory)/TypeScript/Resolver.ts --outDir Scripts --removeComments --lib ES2015" />
+  </Target>
+
+  <ItemGroup>
+    <Compile Remove="TypeScript\node_modules\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="TypeScript\node_modules\**" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Remove="TypeScript\node_modules\**" />
+  </ItemGroup>
+</Project>
