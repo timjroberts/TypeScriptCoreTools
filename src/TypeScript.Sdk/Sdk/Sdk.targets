@@ -1,0 +1,125 @@
+<Project>
+    <UsingTask TaskName="Tasks.Npm.ResolvePackagesTask"
+        AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.Npm.dll" />
+    <UsingTask TaskName="Tasks.TypeScript.WriteTsConfigTask"
+        AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.TypeScript.dll" />
+    <UsingTask TaskName="Tasks.TypeScript.CompileTypeScript"
+        AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.TypeScript.dll" />
+
+    <PropertyGroup>
+        <TsConfigJsonFilePath>$(MSBuildProjectDirectory)/tsconfig.json</TsConfigJsonFilePath>
+        <PackageJsonFilePath>$(MSBuildProjectDirectory)/package.json</PackageJsonFilePath>
+        <IndexModuleFilePath>$(MSBuildProjectDirectory)/index.ts</IndexModuleFilePath>
+        <ProjectAssetsFilePath>$(MSBuildProjectDirectory)/obj/project.assets.json</ProjectAssetsFilePath>
+        <HasIndexModule Condition="Exists('$(IndexModuleFilePath)') Or Exists('$(IndexModuleFilePath)x')">true</HasIndexModule>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <RestoreProjectDependsOn>
+            RestoreNpmPackages;
+            UpdateRestoredTypeRootDirectoryPaths
+        </RestoreProjectDependsOn>
+    </PropertyGroup>
+
+
+	<Target Name="RestoreProject"
+        AfterTargets="_GenerateProjectRestoreGraph"
+        DependsOnTargets="_RestoreProject;$(RestoreProjectDependsOn)"
+        Condition="'$(UsingMicrosoftNETSdkWeb)' == 'false'" />
+
+
+    <Target Name="RestoreNpmPackages"
+        Condition="Exists('$(PackageJsonFilePath)')">
+        
+        <Exec Command="npm install --no-save" WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+        <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="true">
+            <Output ItemName="_ResolvedPackages" TaskParameter="ResolvedPackages"/>
+        </ResolvePackagesTask>
+
+        <CreateItem Include="@(_ResolvedPackages->'%(ResolvedTypesRootDirectoryPath)/**/package.json')"
+            AdditionalMetadata="PackageName=%(identity)">
+            <Output ItemName="_TypingsFile" TaskParameter="Include" />
+        </CreateItem>
+        <CreateItem Include="@(_ResolvedPackages->'%(ResolvedTypesRootDirectoryPath)/**/*.d.ts')"
+            AdditionalMetadata="PackageName=%(identity)">
+            <Output ItemName="_TypingsFile" TaskParameter="Include" />
+        </CreateItem>
+
+        <Copy SourceFiles="@(_TypingsFile)"
+            DestinationFiles="@(_TypingsFile->'$(MSBuildProjectDirectory)/obj/typings/%(PackageName)/%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
+
+
+    <Target Name="UpdateRestoredTypeRootDirectoryPaths"
+        Condition="'$(UsingMicrosoftNETSdkWeb)' == 'false' And '$(EmitTypeScript)' == 'true'">
+
+        <MSBuild Projects="@(ProjectReference)" Targets="_GetTsConfigTypeRootDirectoryPaths">
+            <Output ItemName="_TypesRootDirectoryPath" TaskParameter="TargetOutputs" />
+        </MSBuild>
+
+        <RemoveDuplicates Inputs="@(_TypesRootDirectoryPath)">  
+            <Output TaskParameter="Filtered" ItemName="_FilteredTypesRootDirectoryPath" />
+        </RemoveDuplicates>
+
+        <WriteTsConfigTask TsConfigJsonFilePath="$(TsConfigJsonFilePath)" CompilerPaths="@(_FilteredTypesRootDirectoryPath)" />
+    </Target>
+
+
+    <Target Name="CompileTypeScript"
+        BeforeTargets="CoreCompile"
+        Condition="'$(UsingMicrosoftNETSdkWeb)' == 'false' And '$(EmitTypeScript)' == 'true' And Exists('$(TsConfigJsonFilePath)') And '$(HasIndexModule)' == 'true'">
+
+        <CompileTypeScript WorkingDirectory="$(MSBuildProjectDirectory)"
+            PackageName="$(NpmFormattedPackageName)"
+            Configuration="$(Configuration)" />
+    </Target>
+
+
+    <Target Name="_RestoreProject"
+        Condition="!Exists('$(ProjectAssetsFilePath)')">
+
+        <MSBuild Projects="$(MSBuildProjectFile)" Targets="Restore" />
+    </Target>
+
+
+    <Target Name="_GetTsConfigTypeRootDirectoryPaths" Returns="@(_TypesRootDirectoryPath)">
+        <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="true">
+            <Output ItemName="_ExportedPackages" TaskParameter="ResolvedPackages"/>
+        </ResolvePackagesTask>
+
+        <PropertyGroup>
+            <IsBundling Condition="'@(_ExportedPackages)' != '' Or '$(ExportProjectReferences)' == 'true'">true</IsBundling>
+        </PropertyGroup>
+
+        <Error Condition="'$(IsBundling)' == 'true' And '$(BundleScope)' != ''"
+            Text="'$(MSBuildProjectName)' is already bundling exported packages and cannot be re-scoped to '$(BundleScope)'." />
+
+        <PropertyGroup>
+            <_BundleScope>$(BundleScope)</_BundleScope>
+            <_BundleScope Condition="'$(_BundleScope)' == '' And '$(IsBundling)' == 'true'">$(ScopeFormattedPackageName)/*</_BundleScope>
+        </PropertyGroup>
+
+        <ItemGroup>
+            <_TypesRootDirectoryPath Condition="'$(IsBundling)' == 'true'"
+                Include="$(ScopeFormattedPackageName)_All">
+
+                <Spec>$(_BundleScope)</Spec>
+                <Path>$(MSBuildProjectDirectory)/obj/typings/*</Path>
+            </_TypesRootDirectoryPath>
+            <_TypesRootDirectoryPath Condition="'$(IsBundling)' != 'true' And '$(HasIndexModule)' == 'true'"
+                Include="$(NpmFormattedPackageName)">
+
+                <Spec>$(NpmFormattedPackageName)</Spec>
+                <Path>$(MSBuildProjectDirectory)/obj/typings/$(NpmFormattedPackageName)</Path>
+            </_TypesRootDirectoryPath>
+        </ItemGroup>
+
+        <MSBuild Projects="@(ProjectReference)"
+            Targets="_GetTsConfigTypeRootDirectoryPaths"
+            Properties="BundleScope=$(_BundleScope)">
+
+            <Output ItemName="_TypesRootDirectoryPath" TaskParameter="TargetOutputs" />
+        </MSBuild>
+    </Target>
+</Project>

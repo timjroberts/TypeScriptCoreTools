@@ -1,0 +1,7 @@
+{
+    "devDependencies": {
+        "@types/node": "latest",
+        "@types/webpack": "latest",
+        "@types/webpack-node-externals": "latest"
+    }
+}
