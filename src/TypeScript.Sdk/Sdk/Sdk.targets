@@ -19,6 +19,10 @@
             RestoreNpmPackages;
             UpdateRestoredTypeRootDirectoryPaths
         </RestoreProjectDependsOn>
+        <CompileProjectDependsOn>
+            CompileTypeScript;
+            Bundle
+        </CompileProjectDependsOn>        
     </PropertyGroup>
 
 
@@ -55,24 +59,34 @@
         Condition="'$(UsingMicrosoftNETSdkWeb)' == 'false' And '$(EmitTypeScript)' == 'true'">
 
         <MSBuild Projects="@(ProjectReference)" Targets="_GetTsConfigTypeRootDirectoryPaths">
-            <Output ItemName="_TypesRootDirectoryPath" TaskParameter="TargetOutputs" />
+            <Output ItemName="_CompilerPaths" TaskParameter="TargetOutputs" />
         </MSBuild>
 
-        <RemoveDuplicates Inputs="@(_TypesRootDirectoryPath)">  
-            <Output TaskParameter="Filtered" ItemName="_FilteredTypesRootDirectoryPath" />
+        <RemoveDuplicates Inputs="@(_CompilerPaths)">  
+            <Output TaskParameter="Filtered" ItemName="_FilteredCompilerPaths" />
         </RemoveDuplicates>
 
-        <WriteTsConfigTask TsConfigJsonFilePath="$(TsConfigJsonFilePath)" CompilerPaths="@(_FilteredTypesRootDirectoryPath)" />
+        <WriteTsConfigTask TsConfigJsonFilePath="$(TsConfigJsonFilePath)" CompilerPaths="@(_FilteredCompilerPaths)" />
     </Target>
 
 
-    <Target Name="CompileTypeScript"
+    <Target Name="CompileProject"
         BeforeTargets="CoreCompile"
-        Condition="'$(UsingMicrosoftNETSdkWeb)' == 'false' And '$(EmitTypeScript)' == 'true' And Exists('$(TsConfigJsonFilePath)') And '$(HasIndexModule)' == 'true'">
+        DependsOnTargets="$(CompileProjectDependsOn)"
+        Condition="'$(UsingMicrosoftNETSdkWeb)' == 'false'" />
+
+
+    <Target Name="CompileTypeScript"
+        Condition="'$(EmitTypeScript)' == 'true' And Exists('$(TsConfigJsonFilePath)') And '$(HasIndexModule)' == 'true'">
 
         <CompileTypeScript WorkingDirectory="$(MSBuildProjectDirectory)"
             PackageName="$(NpmFormattedPackageName)"
             Configuration="$(Configuration)" />
+    </Target>
+
+
+    <Target Name="Bundle">
+        
     </Target>
 
 
@@ -117,7 +131,8 @@
 
         <MSBuild Projects="@(ProjectReference)"
             Targets="_GetTsConfigTypeRootDirectoryPaths"
-            Properties="BundleScope=$(_BundleScope)">
+            Properties="BundleScope=$(_BundleScope)"
+            Condition="'$(IsBundling)' == 'true'">
 
             <Output ItemName="_TypesRootDirectoryPath" TaskParameter="TargetOutputs" />
         </MSBuild>
