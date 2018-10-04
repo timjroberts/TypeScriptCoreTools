@@ -2,7 +2,6 @@
     <PropertyGroup>
         <UsingMicrosoftNETSdkWeb Condition="'$(UsingMicrosoftNETSdkWeb)' == ''">false</UsingMicrosoftNETSdkWeb>
         <ExportProjectReferences>false</ExportProjectReferences>
-        <ScopeFormattedPackageName>@$(MSBuildProjectName.Replace('.', '-'))</ScopeFormattedPackageName>
         <NpmFormattedPackageName>$(MSBuildProjectName.Replace('.', '-').ToLowerInvariant())</NpmFormattedPackageName>
         <EmitTypeScript>true</EmitTypeScript>
     </PropertyGroup>

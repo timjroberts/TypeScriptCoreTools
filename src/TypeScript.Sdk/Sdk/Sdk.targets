@@ -106,32 +106,15 @@
             <IsBundling Condition="'@(_ExportedPackages)' != '' Or '$(ExportProjectReferences)' == 'true'">true</IsBundling>
         </PropertyGroup>
 
-        <Error Condition="'$(IsBundling)' == 'true' And '$(BundleScope)' != ''"
-            Text="'$(MSBuildProjectName)' is already bundling exported packages and cannot be re-scoped to '$(BundleScope)'." />
-
-        <PropertyGroup>
-            <_BundleScope>$(BundleScope)</_BundleScope>
-            <_BundleScope Condition="'$(_BundleScope)' == '' And '$(IsBundling)' == 'true'">$(ScopeFormattedPackageName)/*</_BundleScope>
-        </PropertyGroup>
-
         <ItemGroup>
             <_TypesRootDirectoryPath Condition="'$(IsBundling)' == 'true'"
-                Include="$(ScopeFormattedPackageName)_All">
-
-                <Spec>$(_BundleScope)</Spec>
-                <Path>$(MSBuildProjectDirectory)/obj/typings/*</Path>
-            </_TypesRootDirectoryPath>
-            <_TypesRootDirectoryPath Condition="'$(IsBundling)' != 'true' And '$(HasIndexModule)' == 'true'"
-                Include="$(NpmFormattedPackageName)">
-
-                <Spec>$(NpmFormattedPackageName)</Spec>
-                <Path>$(MSBuildProjectDirectory)/obj/typings/$(NpmFormattedPackageName)</Path>
-            </_TypesRootDirectoryPath>
+                Include="$([System.IO.Directory]::GetDirectories(&quot;$(MSBuildProjectDirectory)/obj/typings&quot;))" />
+            <_TypesRootDirectoryPath Condition="'$(HasIndexModule)' == 'true'"
+                Include="$(MSBuildProjectDirectory)/obj/typings/$(NpmFormattedPackageName)" />
         </ItemGroup>
 
         <MSBuild Projects="@(ProjectReference)"
             Targets="_GetTsConfigTypeRootDirectoryPaths"
-            Properties="BundleScope=$(_BundleScope)"
             Condition="'$(IsBundling)' == 'true'">
 
             <Output ItemName="_TypesRootDirectoryPath" TaskParameter="TargetOutputs" />

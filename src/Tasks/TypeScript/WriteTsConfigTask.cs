@@ -61,7 +61,9 @@ namespace Tasks.TypeScript
                     new JObject(),
                     (obj, taskItem) =>
                     {
-                        obj.Add(taskItem.GetMetadata("Spec"), new JArray(taskItem.GetMetadata("Path")));
+                        var compilerPathDirectory = new DirectoryInfo(taskItem.ItemSpec);
+
+                        obj.Add(compilerPathDirectory.Name, new JArray(compilerPathDirectory.FullName));
 
                         return obj;
                     }
