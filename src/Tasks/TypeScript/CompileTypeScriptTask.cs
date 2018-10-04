@@ -6,7 +6,7 @@ using Microsoft.Build.Utilities;
 
 namespace Tasks.TypeScript
 {
-    public class CompileTypeScript : Task
+    public class CompileTypeScriptTask : Task
     {
         private static readonly IList<string> ESTargets = new List<string>() { "ES5" };
 

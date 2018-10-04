@@ -20,6 +20,7 @@
     <ItemGroup>
         <ProjectReference Include="../Tasks/Npm/Tasks.Npm.csproj" />
         <ProjectReference Include="../Tasks/TypeScript/Tasks.TypeScript.csproj" />
+        <ProjectReference Include="../Tasks/WebPack/Tasks.WebPack.csproj" />
     </ItemGroup>
 
     <ItemGroup>

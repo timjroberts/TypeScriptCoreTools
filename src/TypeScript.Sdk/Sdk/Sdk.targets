@@ -3,8 +3,10 @@
         AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.Npm.dll" />
     <UsingTask TaskName="Tasks.TypeScript.WriteTsConfigTask"
         AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.TypeScript.dll" />
-    <UsingTask TaskName="Tasks.TypeScript.CompileTypeScript"
+    <UsingTask TaskName="Tasks.TypeScript.CompileTypeScriptTask"
         AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.TypeScript.dll" />
+    <UsingTask TaskName="Tasks.WebPack.WebPackTask"
+        AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.WebPack.dll" />
 
     <PropertyGroup>
         <TsConfigJsonFilePath>$(MSBuildProjectDirectory)/tsconfig.json</TsConfigJsonFilePath>
@@ -59,14 +61,14 @@
         Condition="'$(UsingMicrosoftNETSdkWeb)' == 'false' And '$(EmitTypeScript)' == 'true'">
 
         <MSBuild Projects="@(ProjectReference)" Targets="_GetTsConfigTypeRootDirectoryPaths">
-            <Output ItemName="_CompilerPaths" TaskParameter="TargetOutputs" />
+            <Output ItemName="_CompilerPath" TaskParameter="TargetOutputs" />
         </MSBuild>
 
-        <RemoveDuplicates Inputs="@(_CompilerPaths)">  
-            <Output TaskParameter="Filtered" ItemName="_FilteredCompilerPaths" />
+        <RemoveDuplicates Inputs="@(_CompilerPath)">  
+            <Output TaskParameter="Filtered" ItemName="_FilteredCompilerPath" />
         </RemoveDuplicates>
 
-        <WriteTsConfigTask TsConfigJsonFilePath="$(TsConfigJsonFilePath)" CompilerPaths="@(_FilteredCompilerPaths)" />
+        <WriteTsConfigTask TsConfigJsonFilePath="$(TsConfigJsonFilePath)" CompilerPaths="@(_FilteredCompilerPath)" />
     </Target>
 
 
@@ -79,14 +81,93 @@
     <Target Name="CompileTypeScript"
         Condition="'$(EmitTypeScript)' == 'true' And Exists('$(TsConfigJsonFilePath)') And '$(HasIndexModule)' == 'true'">
 
-        <CompileTypeScript WorkingDirectory="$(MSBuildProjectDirectory)"
+        <CompileTypeScriptTask WorkingDirectory="$(MSBuildProjectDirectory)"
             PackageName="$(NpmFormattedPackageName)"
             Configuration="$(Configuration)" />
     </Target>
 
 
     <Target Name="Bundle">
-        
+        <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="true">
+            <Output ItemName="_ExportedPackage" TaskParameter="ResolvedPackages"/>
+        </ResolvePackagesTask>
+
+        <PropertyGroup>
+            <IsBundling Condition="'@(_ExportedPackage)' != '' Or '$(ExportProjectReferences)' == 'true'">true</IsBundling>
+            <IsBundlingTarget>false</IsBundlingTarget>
+            <IsBundlingTarget Condition="'$(IsBundling)' == 'true'">true</IsBundlingTarget>
+        </PropertyGroup>
+
+        <ItemGroup>
+            <_BundledPackage Condition="'$(HasIndexModule)' == 'true'"
+                Include="$(NpmFormattedPackageName)">
+
+                <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/obj/$(Configuration)/js</ResolvedDirectoryPath>
+            </_BundledPackage>
+        </ItemGroup>
+
+        <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="false">
+            <Output ItemName="_BundledPackage" TaskParameter="ResolvedPackages"/>
+        </ResolvePackagesTask>
+
+        <MSBuild Projects="@(ProjectReference)"
+            Targets="_GetBundledDirectoryPaths"
+            Properties="Configuration=$(Configuration);IsBundlingTarget=$(IsBundlingTarget)">
+
+            <Output ItemName="_BundledPackage" TaskParameter="TargetOutputs" />
+        </MSBuild>
+
+        <RemoveDuplicates Inputs="@(_BundledPackage)">  
+            <Output TaskParameter="Filtered" ItemName="_FilteredBundledPackage" />
+        </RemoveDuplicates>
+
+        <WebPackTask WorkingDirectory="$(MSBuildProjectDirectory)"
+            Configuration="$(Configuration)"
+            WebPackLibraryName="$(WebPackLibraryName)"
+            BundleAsLibrary="$(BundleAsLibrary)"
+            BundledPackages="@(_FilteredBundledPackage)" />
+    </Target>
+
+
+    <Target Name="_GetBundledDirectoryPaths" Returns="@(_BundledPackageDirectoryPath)">
+        <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="true">
+            <Output ItemName="_ExportedPackage" TaskParameter="ResolvedPackages"/>
+        </ResolvePackagesTask>
+
+        <PropertyGroup>
+            <IsBundling Condition="'@(_ExportedPackage)' != '' Or '$(ExportProjectReferences)' == 'true'">true</IsBundling>
+        </PropertyGroup>
+
+        <ItemGroup>
+            <_BundledPackageDirectoryPath Condition="'$(IsBundling)' == 'true'"
+                Include="$(NpmFormattedPackageName)">
+                <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/bin/$(Configuration)/js</ResolvedDirectoryPath>
+                <IsBundle>true</IsBundle>
+            </_BundledPackageDirectoryPath>
+            <_BundledPackageDirectoryPath Condition="'$(IsBundling)' != 'true' And '$(IsBundlingTarget)' == 'false'"
+                Include="$(NpmFormattedPackageName)">
+                <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/obj/$(Configuration)/js</ResolvedDirectoryPath>
+                <IsBundle>true</IsBundle>
+            </_BundledPackageDirectoryPath>
+            <_BundledPackageDirectoryPath Condition="'$(IsBundling)' != 'true' And '$(IsBundlingTarget)' == 'true'"
+                Include="$(NpmFormattedPackageName)">
+                <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/obj/$(Configuration)/js</ResolvedDirectoryPath>
+            </_BundledPackageDirectoryPath>
+        </ItemGroup>
+
+        <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="false"
+            Condition="'$(IsBundling)' != 'true'">
+
+            <Output ItemName="_BundledPackageDirectoryPath" TaskParameter="ResolvedPackages"/>
+        </ResolvePackagesTask>
+
+        <MSBuild Projects="@(ProjectReference)"
+            Targets="_GetBundledDirectoryPaths"
+            Properties="Configuration=$(Configuration);IsBundlingTarget=$(IsBundlingTarget)"
+            Condition="'$(IsBundling)' != 'true'">
+
+            <Output ItemName="_BundledPackageDirectoryPath" TaskParameter="TargetOutputs" />
+        </MSBuild>
     </Target>
 
 
@@ -99,11 +180,11 @@
 
     <Target Name="_GetTsConfigTypeRootDirectoryPaths" Returns="@(_TypesRootDirectoryPath)">
         <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="true">
-            <Output ItemName="_ExportedPackages" TaskParameter="ResolvedPackages"/>
+            <Output ItemName="_ExportedPackage" TaskParameter="ResolvedPackages"/>
         </ResolvePackagesTask>
 
         <PropertyGroup>
-            <IsBundling Condition="'@(_ExportedPackages)' != '' Or '$(ExportProjectReferences)' == 'true'">true</IsBundling>
+            <IsBundling Condition="'@(_ExportedPackage)' != '' Or '$(ExportProjectReferences)' == 'true'">true</IsBundling>
         </PropertyGroup>
 
         <ItemGroup>

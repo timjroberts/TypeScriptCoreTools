@@ -3,6 +3,9 @@
         <UsingMicrosoftNETSdkWeb Condition="'$(UsingMicrosoftNETSdkWeb)' == ''">false</UsingMicrosoftNETSdkWeb>
         <ExportProjectReferences>false</ExportProjectReferences>
         <NpmFormattedPackageName>$(MSBuildProjectName.Replace('.', '-').ToLowerInvariant())</NpmFormattedPackageName>
+        <WebPackLibraryName>$(NpmFormattedPackageName.Replace('-', '_').ToLowerInvariant())</WebPackLibraryName>
+        <BundleAsLibrary>true</BundleAsLibrary>
+        <BundleAsLibrary Condition="'$(UsingMicrosoftNETSdkWeb)' == 'true'">false</BundleAsLibrary>
         <EmitTypeScript>true</EmitTypeScript>
     </PropertyGroup>
 </Project>
