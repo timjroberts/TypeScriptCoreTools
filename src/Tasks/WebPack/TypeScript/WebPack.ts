@@ -74,6 +74,11 @@ function CompileConfiguration(webPackConfig: webpack.Configuration): Promise<voi
     });
 }
 
+function NormalizePathEnding(currentPath: string): string
+{
+    return currentPath.endsWith(path.sep) ? currentPath : currentPath + path.sep;
+}
+
 function RewriteManifest(manifestFilePath: string, contextPath: string, bundlePackages: BundlePackage[], esTarget: string): void
 {
     var manifest = JSON.parse(fs.readFileSync(manifestFilePath).toString());
@@ -82,7 +87,7 @@ function RewriteManifest(manifestFilePath: string, contextPath: string, bundlePa
     for (var contentPath in manifest.content)
     {
         var absoluteContentPath = path.normalize(path.join(contextPath, contentPath));
-        var bundledPackage = bundlePackages.find(target => absoluteContentPath.startsWith(target.resolvedDirectoryPath));
+        var bundledPackage = bundlePackages.find(target => absoluteContentPath.startsWith(NormalizePathEnding(target.resolvedDirectoryPath)));
 
         if (!bundledPackage) continue;
 
