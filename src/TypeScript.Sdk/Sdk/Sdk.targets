@@ -146,7 +146,7 @@
             </_BundledPackageDirectoryPath>
             <_BundledPackageDirectoryPath Condition="'$(IsBundling)' != 'true' And '$(IsBundlingTarget)' == 'false'"
                 Include="$(NpmFormattedPackageName)">
-                <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/obj/$(Configuration)/js</ResolvedDirectoryPath>
+                <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/bin/$(Configuration)/js</ResolvedDirectoryPath>
                 <IsBundle>true</IsBundle>
             </_BundledPackageDirectoryPath>
             <_BundledPackageDirectoryPath Condition="'$(IsBundling)' != 'true' And '$(IsBundlingTarget)' == 'true'"

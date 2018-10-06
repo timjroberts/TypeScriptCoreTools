@@ -1,4 +1,4 @@
-
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
@@ -24,12 +24,16 @@ namespace Tasks.TypeScript
         
         public override bool Execute()
         {
+            var sourceMapOption = string.Equals(Configuration, "debug", StringComparison.InvariantCultureIgnoreCase)
+                ? "--sourceMap "
+                : string.Empty;
+
             foreach (var esTarget in ESTargets)
             {
                 var compileErrors = new List<string>();
 
                 var tscProcess = Process.Start(
-                    new ProcessStartInfo("tsc", $"-d -t {esTarget.ToLower()} -m commonjs --outDir obj/{Configuration}/js --declarationDir obj/typings/{PackageName}")
+                    new ProcessStartInfo("tsc", $"-d -t {esTarget.ToLower()} -m commonjs {sourceMapOption}--outDir obj/{Configuration}/js --declarationDir obj/typings/{PackageName}")
                     { 
                         WorkingDirectory = WorkingDirectory,
                         CreateNoWindow = true,
