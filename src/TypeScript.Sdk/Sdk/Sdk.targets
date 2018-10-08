@@ -7,6 +7,9 @@
         AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.TypeScript.dll" />
     <UsingTask TaskName="Tasks.WebPack.WebPackTask"
         AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.WebPack.dll" />
+    <UsingTask TaskName="Tasks.Build.ResolvePackageReferencePathsTask"
+        AssemblyFile="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/Tasks.Build.dll" />
+
 
     <PropertyGroup>
         <TsConfigJsonFilePath>$(MSBuildProjectDirectory)/tsconfig.json</TsConfigJsonFilePath>
@@ -64,6 +67,17 @@
             <Output ItemName="_CompilerPath" TaskParameter="TargetOutputs" />
         </MSBuild>
 
+        <ResolvePackageReferencePathsTask ProjectDirectory="$(MSBuildProjectDirectory)"
+            PackageReferences="@(PackageReference)"
+            ResolveTypePaths="true">
+
+            <Output ItemName="_CompilerPath" TaskParameter="ResolvedPaths"/>
+        </ResolvePackageReferencePathsTask>
+
+        <!-- <ItemGroup>
+            <_CompilerPath Include="$([System.IO.Directory]::GetDirectories(&quot;@(_PackageRefPath->'%(Identity)/typings')&quot;))" />
+        </ItemGroup> -->
+
         <RemoveDuplicates Inputs="@(_CompilerPath)">  
             <Output TaskParameter="Filtered" ItemName="_FilteredCompilerPath" />
         </RemoveDuplicates>
@@ -91,6 +105,9 @@
         <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="true">
             <Output ItemName="_ExportedPackage" TaskParameter="ResolvedPackages"/>
         </ResolvePackagesTask>
+        <ResolvePackageReferencePathsTask ProjectDirectory="$(MSBuildProjectDirectory)" PackageReferences="@(PackageReference)">
+            <Output ItemName="_PackageRefPath" TaskParameter="ResolvedPaths"/>
+        </ResolvePackageReferencePathsTask>
 
         <PropertyGroup>
             <IsBundling Condition="'@(_ExportedPackage)' != '' Or '$(ExportProjectReferences)' == 'true'">true</IsBundling>
@@ -103,6 +120,9 @@
                 Include="$(NpmFormattedPackageName)">
 
                 <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/obj/$(Configuration)/js</ResolvedDirectoryPath>
+            </_BundledPackage>
+            <_BundledPackage Include="@(_PackageRefPath->'%(Identity)/lib')">
+                <IsBundle>true</IsBundle>
             </_BundledPackage>
         </ItemGroup>
 

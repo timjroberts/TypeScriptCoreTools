@@ -21,6 +21,7 @@
         <ProjectReference Include="../Tasks/Npm/Tasks.Npm.csproj" />
         <ProjectReference Include="../Tasks/TypeScript/Tasks.TypeScript.csproj" />
         <ProjectReference Include="../Tasks/WebPack/Tasks.WebPack.csproj" />
+        <ProjectReference Include="../Tasks/Build/Tasks.Build.csproj" />
     </ItemGroup>
 
     <ItemGroup>
