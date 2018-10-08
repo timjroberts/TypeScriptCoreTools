@@ -51,6 +51,5 @@
                 <BuildAction>Content</BuildAction>
             </_PackageFiles>
         </ItemGroup>
-
     </Target>
 </Project>

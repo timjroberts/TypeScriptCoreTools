@@ -129,6 +129,28 @@
     </Target>
 
 
+    <Target Name="PackProject"
+        BeforeTargets="GenerateNuspec">
+
+        <!--
+        The include needs to happen after output has been copied to build output folder
+        but before NuGet generates a nuspec. See https://github.com/NuGet/Home/issues/4704.
+        -->
+        <ItemGroup>
+            <_PackageFiles Include="$(MSBuildProjectDirectory)/bin/$(Configuration)/js/**/*">
+                <PackagePath>lib/js/%(RecursiveDir)</PackagePath>
+                <Visible>false</Visible>
+                <BuildAction>Content</BuildAction>
+            </_PackageFiles>
+            <_PackageFiles Include="$(MSBuildProjectDirectory)/obj/typings/**/*">
+                <PackagePath>lib/typings/%(RecursiveDir)</PackagePath>
+                <Visible>false</Visible>
+                <BuildAction>Content</BuildAction>
+            </_PackageFiles>
+        </ItemGroup>
+    </Target>
+
+
     <Target Name="_GetBundledDirectoryPaths" Returns="@(_BundledPackageDirectoryPath)">
         <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="true">
             <Output ItemName="_ExportedPackage" TaskParameter="ResolvedPackages"/>
