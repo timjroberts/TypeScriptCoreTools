@@ -120,11 +120,15 @@
                 Include="$(NpmFormattedPackageName)">
 
                 <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/obj/$(Configuration)/js</ResolvedDirectoryPath>
-            </_BundledPackage>
-            <_BundledPackage Include="@(_PackageRefPath->'%(Identity)/lib')">
-                <IsBundle>true</IsBundle>
+                <HasEntryPoint>true</HasEntryPoint>
             </_BundledPackage>
         </ItemGroup>
+
+        <CreateItem Include="@(_PackageRefPath->'%(Identity)')"
+            AdditionalMetadata="ResolvedDirectoryPath=%(Identity)/js;IsBundle=true;HasEntryPoint=true">
+
+            <Output ItemName="_BundledPackage" TaskParameter="Include" />
+        </CreateItem>
 
         <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="false">
             <Output ItemName="_BundledPackage" TaskParameter="ResolvedPackages"/>
@@ -184,16 +188,19 @@
             <_BundledPackageDirectoryPath Condition="'$(IsBundling)' == 'true'"
                 Include="$(NpmFormattedPackageName)">
                 <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/bin/$(Configuration)/js</ResolvedDirectoryPath>
+                <HasEntryPoint>true</HasEntryPoint>
                 <IsBundle>true</IsBundle>
             </_BundledPackageDirectoryPath>
             <_BundledPackageDirectoryPath Condition="'$(IsBundling)' != 'true' And '$(IsBundlingTarget)' == 'false'"
                 Include="$(NpmFormattedPackageName)">
                 <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/bin/$(Configuration)/js</ResolvedDirectoryPath>
+                <HasEntryPoint>true</HasEntryPoint>
                 <IsBundle>true</IsBundle>
             </_BundledPackageDirectoryPath>
             <_BundledPackageDirectoryPath Condition="'$(IsBundling)' != 'true' And '$(IsBundlingTarget)' == 'true'"
                 Include="$(NpmFormattedPackageName)">
                 <ResolvedDirectoryPath>$(MSBuildProjectDirectory)/obj/$(Configuration)/js</ResolvedDirectoryPath>
+                <HasEntryPoint>true</HasEntryPoint>
             </_BundledPackageDirectoryPath>
         </ItemGroup>
 

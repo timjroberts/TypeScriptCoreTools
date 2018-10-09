@@ -103,14 +103,22 @@ namespace Tasks.Npm
 
                         var taskItem = new TaskItem(property.Name);
 
+                        var hasResolvedEntryPoint = (bool)resolvedPackage["hasResolvedEntryPoint"];
+
                         taskItem.SetMetadata("ResolvedDirectoryPath", (string)resolvedPackage["resolvedDirectoryPath"]);
                         taskItem.SetMetadata("ResolvedTypesRootDirectoryPath", (string)resolvedPackage["typesRootDirectoryPath"]);
                         taskItem.SetMetadata("ResolvedVersion", (string)resolvedPackage["resolvedVersion"]);
                         taskItem.SetMetadata("IsExported", exportedDependencies.Contains(property.Name) ? "true" : "false");
+                        taskItem.SetMetadata("HasEntryPoint", hasResolvedEntryPoint ? "true" : "false");
+
+                        if (!hasResolvedEntryPoint)
+                        {
+                            Log.LogWarning($"Package '{property.Name}' does not have an entry point.");
+                        }
 
                         return taskItem;
                     })
-                    .Where(taskItem => !ExportedOnly || ExportedOnly && string.Equals(taskItem.GetMetadata("IsExported"), "true", StringComparison.Ordinal))
+                    .Where(taskItem => !ExportedOnly || ExportedOnly && string.Equals(taskItem.GetMetadata("IsExported"), "true", StringComparison.OrdinalIgnoreCase))
                     .ToArray();
             }
 

@@ -46,19 +46,28 @@ namespace Tasks.WebPack
         private static JArray MapBundledPackages(ITaskItem[] bundledPackages)
         {
             return new JArray(
-                bundledPackages.Select(bundledPackage =>
-                {
-                    var obj = new JObject();
+                bundledPackages
+                .Where(bundledPackage =>
+                    {
+                        var hasEntryPoint = bundledPackage.GetMetadata("HasEntryPoint");
 
-                    obj.Add("packageName", bundledPackage.ItemSpec);
-                    obj.Add("resolvedDirectoryPath", bundledPackage.GetMetadata("ResolvedDirectoryPath"));
+                        return string.Equals(hasEntryPoint, "true", StringComparison.OrdinalIgnoreCase);
+                    }
+                )
+                .Select(bundledPackage =>
+                    {
+                        var obj = new JObject();
 
-                    var isBundle = bundledPackage.GetMetadata("IsBundle");
+                        obj.Add("packageName", bundledPackage.ItemSpec);
+                        obj.Add("resolvedDirectoryPath", bundledPackage.GetMetadata("ResolvedDirectoryPath"));
 
-                    obj.Add("isBundle", string.IsNullOrEmpty(isBundle) ? false : bool.Parse(isBundle));
+                        var isBundle = bundledPackage.GetMetadata("IsBundle");
 
-                    return obj;
-                })
+                        obj.Add("isBundle", string.IsNullOrEmpty(isBundle) ? false : bool.Parse(isBundle));
+
+                        return obj;
+                    }
+                )
             );
         }
     }

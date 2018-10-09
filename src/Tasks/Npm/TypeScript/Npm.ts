@@ -10,6 +10,7 @@ type ResolvedPackage = {
     resolvedDirectoryPath: string;
     resolvedVersion: string;
     typesRootDirectoryPath?: string;
+    hasResolvedEntryPoint: boolean;
 };
 
 /**
@@ -47,7 +48,27 @@ function ResolvePackage(packageName: string): ResolvedPackage
 {
     try
     {
-        var packageRootDirectoryPath = FindNearest(path.parse(require.resolve(packageName)), "package.json");
+        var packageRootDirectoryPath = null;
+        var hasResolvedEntryPoint = true;
+
+        try
+        {
+            packageRootDirectoryPath = FindNearest(path.parse(require.resolve(packageName)), "package.json");
+        }
+        catch
+        { }
+
+        if (!packageRootDirectoryPath)
+        {
+            // We'll try and resolve the package directly to the node_modules folder, and if that is found with a 'package.json'
+            // file, then we'll identify it as a resolved package that hasn't got an entry point.
+            //
+            // react uses a types package called 'csstype' that works like this. We want its typings, but it doesn't use the
+            // the usual @type scope
+            packageRootDirectoryPath = FindNearest(path.parse(path.join(process.cwd(), "node_modules", packageName, "package.json")), "package.json");
+
+            hasResolvedEntryPoint = false;
+        }
 
         if (!packageRootDirectoryPath) return null;
 
@@ -67,7 +88,8 @@ function ResolvePackage(packageName: string): ResolvedPackage
         return {
             resolvedDirectoryPath: packageRootDirectoryPath.dir,
             resolvedVersion: packageObj["version"],
-            typesRootDirectoryPath: typesRootDirectoryPath
+            typesRootDirectoryPath: typesRootDirectoryPath,
+            hasResolvedEntryPoint: hasResolvedEntryPoint
         }
     }
     catch
