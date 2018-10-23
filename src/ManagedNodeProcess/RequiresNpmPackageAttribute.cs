@@ -11,11 +11,14 @@ namespace ManagedNodeProcess
         {
             PackageName = packageName;
             Version = DefaultVersion;
+            PackageWriter = null;
         }
 
         public string PackageName { get; protected set; }
 
         public string Version { get; set; }
+
+        public Type PackageWriter { get; set; }
 
         public override string ToString()
         {

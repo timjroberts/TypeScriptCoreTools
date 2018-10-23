@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+        <AssemblyName>typescript.sdk.dotnetcore.testadapter</AssemblyName>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>TypeScript.Sdk.TestRunner.VisualStudio</PackageId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../ManagedNodeProcess/ManagedNodeProcess.csproj" PrivateAssets="All">
+            <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </ProjectReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+        <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="15.9.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Scripts/**/*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="build/*">
+            <Pack>true</Pack>
+            <PackagePath>build</PackagePath>
+        </Content>
+    </ItemGroup>
+
+    <!--
+        This target invokes the TypeScript compiler.
+        -->
+    <Target Name="CompileTypeScript" BeforeTargets="BeforeBuild">
+        <Exec Command="tsc --outDir ../Scripts --removeComments" WorkingDirectory="$(MSBuildProjectDirectory)/TypeScript" />
+    </Target>
+
+    <!--
+        This target installs the NPM packages required by the TypeScript modules.
+        -->
+    <Target Name="RestoreNodeModules" AfterTargets="_GenerateProjectRestoreGraph" Condition="!Exists('$(MSBuildThisFileDirectory)/TypeScript/node_modules')">
+        <Exec Command="npm install --no-save" WorkingDirectory="$(MSBuildThisFileDirectory)/TypeScript" />
+    </Target>
+
+    <!--
+      This task includes all our assembly dependecies - creating a 'fat' package
+      (ensure CopyLocalLockFileAssemblies is true):
+
+      https://natemcmaster.com/blog/2017/11/11/msbuild-task-with-dependencies/
+      https://github.com/NuGet/Home/issues/4704
+    -->
+    <Target Name="PackLocalLockFileAssemblies"
+        BeforeTargets="GenerateNuspec">
+
+        <!--
+        The include needs to happen after output has been copied to build output folder
+        but before NuGet generates a nuspec. See https://github.com/NuGet/Home/issues/4704.
+        -->
+        <ItemGroup>
+            <_PackageFiles Include="bin/$(Configuration)/**/*.dll" Exclude="bin/$(Configuration)/**/$(AssemblyName).dll">
+                <PackagePath>lib/%(RecursiveDir)</PackagePath>
+                <Visible>false</Visible>
+                <BuildAction>Content</BuildAction>
+            </_PackageFiles>
+            <_PackageFiles Include="TypeScript/node_modules/@types/jest/**/*">
+                <PackagePath>lib/typings/jest</PackagePath>
+                <Visible>false</Visible>
+                <BuildAction>Content</BuildAction>
+            </_PackageFiles>
+        </ItemGroup>
+    </Target>
+</Project>

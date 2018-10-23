@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "lib": [
+            "es2015"
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "typescript-sdk-utils": [ "./Utils" ],
+            "typescript-sdk-jest-resolve": [ "./JestResolve" ],
+            "typescript-sdk-jest-resolver": [ "./JestResolver" ]
+        }
+    }
+}

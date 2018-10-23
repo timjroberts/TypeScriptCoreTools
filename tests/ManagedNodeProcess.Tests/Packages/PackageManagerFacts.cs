@@ -1,11 +1,27 @@
 using System;
+using System.Collections.Generic;
 using ManagedNodeProcess.Packages;
+using ManagedNodeProcess.Utils;
 using TestUtils;
 using TestUtils.Fixtures;
 using Xunit;
 
 namespace ManagedNodeProcess.Tests.Packages
 {
+    public class FooPackageWriter : EmbeddedScriptResourcePackageWriter
+    {
+        public FooPackageWriter()
+            : base(new [] { "ManagedNodeProcess.Tests/Scripts/Foo.js" })
+        { }
+    }
+
+    public class BarPackageWriter : EmbeddedScriptResourcePackageWriter
+    {
+        public BarPackageWriter()
+            : base(new [] { "ManagedNodeProcess.Tests/Scripts/Folder/Bar.js" })
+        { }
+    }
+
     public class IndependentNodeProcess : NodeProcess
     { }
 
@@ -15,6 +31,14 @@ namespace ManagedNodeProcess.Tests.Packages
 
     [RequiresNpmPackage("a67ceda85f")]
     public class UnknownDependentNodeProcess : NodeProcess
+    { }
+
+    [RequiresNpmPackage("foo-package", PackageWriter=typeof(FooPackageWriter))]
+    public class FooNodeProcess : NodeProcess
+    { }
+
+    [RequiresNpmPackage("bar-package", PackageWriter=typeof(BarPackageWriter))]
+    public class BarNodeProcess : NodeProcess
     { }
 
     public class PackageManagerFacts : IClassFixture<TempDirectoryFixture>
@@ -52,7 +76,7 @@ namespace ManagedNodeProcess.Tests.Packages
 
             Assert.Collection(
                 packageMgr.RequiredPackages,
-                p => string.Equals(p, "left-pad@latest", StringComparison.Ordinal)
+                p => string.Equals(p.ToString(), "left-pad@latest", StringComparison.Ordinal)
             );
         }
 
@@ -65,6 +89,28 @@ namespace ManagedNodeProcess.Tests.Packages
             await packageMgr.Install();
 
             DirectoryAssert.SubDirectoriesExist(tempDir, "node_modules", "left-pad");
+        }
+
+        [Fact]
+        public async void PackageWriterCanBeUsedToCreateStubPackage()
+        {
+            var tempDir = _tempDirectory.Create();
+            var packageMgr = PackageManager.Create<FooNodeProcess>(tempDir);
+
+            await packageMgr.Install();
+
+            DirectoryAssert.SubDirectoriesExist(tempDir, "node_modules", "foo-package");
+        }
+
+        [Fact]
+        public async void PackageWriterUsingSubFolderCanBeUsedToCreateStubPackage()
+        {
+            var tempDir = _tempDirectory.Create();
+            var packageMgr = PackageManager.Create<BarNodeProcess>(tempDir);
+
+            await packageMgr.Install();
+
+            DirectoryAssert.SubDirectoriesExist(tempDir, "node_modules", "bar-package");
         }
 
         [Fact]

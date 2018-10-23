@@ -18,4 +18,8 @@
         <ProjectReference Include="../../src/ManagedNodeProcess/ManagedNodeProcess.csproj" />
         <ProjectReference Include="../TestUtils/TestUtils.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Scripts/**/*" />
+    </ItemGroup>
 </Project>

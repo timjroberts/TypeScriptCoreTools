@@ -202,10 +202,10 @@ namespace ManagedNodeProcess
                 EmbeddedScriptResourceReader.ReadScript("/Scripts/Bios.js"),
                 string.Empty
             );
-                    
+  
             var startInfo = new ProcessStartInfo("node")
                 {
-                    WorkingDirectory = WorkingDirectory?.FullName,
+                    WorkingDirectory = WorkingDirectory?.FullName ?? Directory.GetCurrentDirectory(),
                     Arguments = $"-e \"{biosScript}\"",
                     UseShellExecute = false,
                     RedirectStandardInput = true,
