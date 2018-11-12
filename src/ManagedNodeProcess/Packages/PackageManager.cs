@@ -44,19 +44,15 @@ namespace ManagedNodeProcess.Packages
 
         private PackageManager(Type type, DirectoryInfo rootDirectory)
         {
-            this._type = type;
-            this._rootDirectory = rootDirectory;
+            _type = type;
+            _rootDirectory = rootDirectory;
         }
 
-        public IEnumerable<string> RequiredPackages
+        public IEnumerable<RequiresNpmPackageAttribute> RequiredPackages
         {
             get
             {
-                var attributes = (RequiresNpmPackageAttribute[])_type.GetCustomAttributes(typeof(RequiresNpmPackageAttribute), true);
-
-                return attributes.Length > 0
-                    ? attributes.Select(a => a.ToString())
-                    : Enumerable.Empty<string>();
+                return (RequiresNpmPackageAttribute[])_type.GetCustomAttributes(typeof(RequiresNpmPackageAttribute), true);
             }
         }
 
@@ -66,11 +62,34 @@ namespace ManagedNodeProcess.Packages
 
             if (requiredPackages.Length == 0 || IsInstalled(_rootDirectory)) return;
 
-            await Task.Run(() =>
+            await InstallNpmPackages(requiredPackages.Where(p => p.PackageWriter is null));
+            await WritePackages(requiredPackages.Where(p => !(p.PackageWriter is null)));
+        }
+
+        public static PackageManager Create<T>(DirectoryInfo rootPath) where T : NodeProcess
+        {
+            return new PackageManager(typeof(T), rootPath);
+        }
+
+        public static PackageManager Create(object nodeProcess, DirectoryInfo rootPath)
+        {
+            if (!typeof(NodeProcess).IsInstanceOfType(nodeProcess))
+            {
+                throw new ArgumentException($"Supplied parameter '{nameof(nodeProcess)}' is not a NodeProcess object.");
+            }
+            
+            return new PackageManager(nodeProcess.GetType(), rootPath);
+        }
+
+        private Task InstallNpmPackages(IEnumerable<RequiresNpmPackageAttribute> npmPackages)
+        {
+            if (npmPackages.Count() == 0) return Task.CompletedTask;
+
+            return Task.Run(() =>
             {
                 var unknownPackages = new List<string>();
 
-                var npmProcess = Process.Start(new ProcessStartInfo("npm", $"install --no-save {string.Join(" ", requiredPackages)}")
+                var npmProcess = Process.Start(new ProcessStartInfo("npm", $"install --no-save {string.Join(" ", npmPackages)}")
                 {
                     WorkingDirectory = _rootDirectory.FullName,
                     CreateNoWindow = true,
@@ -101,19 +120,22 @@ namespace ManagedNodeProcess.Packages
             });
         }
 
-        public static PackageManager Create<T>(DirectoryInfo rootPath) where T : NodeProcess
+        private async Task WritePackages(IEnumerable<RequiresNpmPackageAttribute> packages)
         {
-            return new PackageManager(typeof(T), rootPath);
-        }
+            if (packages.Count() == 0) return;
 
-        public static PackageManager Create(object nodeProcess, DirectoryInfo rootPath)
-        {
-            if (!typeof(NodeProcess).IsInstanceOfType(nodeProcess))
+            foreach (var package in packages)
             {
-                throw new ArgumentException($"Supplied parameter '{nameof(nodeProcess)}' is not a NodeProcess object.");
+                var packageWriter = (IPackageWriter)Activator.CreateInstance(package.PackageWriter);
+
+                var nodeModulesDirectoryPath = Path.Combine(_rootDirectory.FullName, "node_modules");
+                var packageDirectoryPath = Path.Combine(nodeModulesDirectoryPath, package.PackageName);
+
+                if (!Directory.Exists(nodeModulesDirectoryPath)) Directory.CreateDirectory(nodeModulesDirectoryPath);
+                if (!Directory.Exists(packageDirectoryPath)) Directory.CreateDirectory(packageDirectoryPath);
+                
+                await packageWriter.WritePackage(package.PackageWriter.Assembly, new DirectoryInfo(packageDirectoryPath));
             }
-            
-            return new PackageManager(nodeProcess.GetType(), rootPath);
         }
     }
 }

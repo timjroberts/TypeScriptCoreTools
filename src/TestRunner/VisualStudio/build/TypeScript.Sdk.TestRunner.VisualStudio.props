@@ -1,0 +1,23 @@
+<Project>
+    <PropertyGroup>
+        <!--
+          Disable Webpack for test projects
+          -->
+        <BundleAsLibrary>false</BundleAsLibrary>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/ManagedNodeProcess.dll">
+            <Link>ManagedNodeProcess.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Visible>false</Visible>
+        </None>    
+        <None Include="$(MSBuildThisFileDirectory)/../lib/netstandard2.0/typescript.sdk.dotnetcore.testadapter.dll">
+            <Link>typescript.sdk.dotnetcore.testadapter.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Visible>false</Visible>
+        </None>
+
+        <ProjectCapability Include="TestContainer" />
+    </ItemGroup>
+</Project>

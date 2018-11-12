@@ -13,6 +13,8 @@ namespace Tasks.Build
     {
         private static readonly IList<string> ESTargets = new List<string>() { "ES5" };
 
+        private static readonly IList<string> ExcludedPackageIds = new List<string>() { "NETStandard.Library", "Microsoft.NET.Test.Sdk" };
+
         public ResolvePackageReferencePathsTask()
         {
             ResolveTypePaths = false;
@@ -56,9 +58,9 @@ namespace Tasks.Build
 
         private ITaskItem[] GetResolvedTypePathItems(NuGetPackageResolver packageResolver)
         {
-            return PackageReferences.Where((taskItem) => !String.Equals(taskItem.ItemSpec, "NETStandard.Library", StringComparison.InvariantCultureIgnoreCase))
+            return PackageReferences.Where((taskItem) => !ExcludedPackageIds.Contains(taskItem.ItemSpec))
                 .Select(p => new DirectoryInfo(Path.Combine(packageResolver.GetPackageDirectory(p.ItemSpec, p.GetMetadata("Version")), "lib")))
-                .Where(dir => File.Exists(Path.Combine(dir.FullName, "js/index.manifest.json")))
+                .Where(dir => Directory.Exists(Path.Combine(dir.FullName, "typings")))
                 .SelectMany(dir => Directory.GetDirectories(Path.Combine(dir.FullName, "typings")))
                 //.SelectMany(libInfo => ESTargets.Select(esTarget => new { PackageName = libInfo.PackageName, ESTarget = esTarget, ManifestFilePath = Path.Combine(libInfo.Directory.FullName, $"js/index.manifest.json") }))
                 //.Where(manifestInfo => File.Exists(manifestInfo.ManifestFilePath))
@@ -80,7 +82,7 @@ namespace Tasks.Build
 
         private ITaskItem[] GetResolvedBundlePath(NuGetPackageResolver packageResolver)
         {
-            return PackageReferences.Where((taskItem) => !String.Equals(taskItem.ItemSpec, "NETStandard.Library", StringComparison.InvariantCultureIgnoreCase))
+            return PackageReferences.Where((taskItem) => !ExcludedPackageIds.Contains(taskItem.ItemSpec))
                 .Select(p => new DirectoryInfo(Path.Combine(packageResolver.GetPackageDirectory(p.ItemSpec, p.GetMetadata("Version")), "lib")))
                 //.SelectMany(libInfo => ESTargets.Select(esTarget => new { PackageName = libInfo.PackageName, ESTarget = esTarget, ManifestFilePath = Path.Combine(libInfo.Directory.FullName, $"js/index.manifest.json") }))
                 //.Where(manifestInfo => File.Exists(manifestInfo.ManifestFilePath))

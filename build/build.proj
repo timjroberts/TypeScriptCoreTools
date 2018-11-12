@@ -29,6 +29,7 @@
 
 	<ItemGroup>
 		<CsProj Include="../src/TypeScript.Sdk/TypeScript.Sdk.csproj" />
+        <CsProj Include="../src/TestRunner/VisualStudio/TestRunner.VisualStudio.csproj" />
 	</ItemGroup>
 
 	<Target Name="Build" DependsOnTargets="Publish" />

@@ -93,7 +93,7 @@
 
 
     <Target Name="CompileTypeScript"
-        Condition="'$(EmitTypeScript)' == 'true' And Exists('$(TsConfigJsonFilePath)') And '$(HasIndexModule)' == 'true'">
+        Condition="'$(EmitTypeScript)' == 'true' And Exists('$(TsConfigJsonFilePath)')">
 
         <CompileTypeScriptTask WorkingDirectory="$(MSBuildProjectDirectory)"
             PackageName="$(NpmFormattedPackageName)"
@@ -101,7 +101,9 @@
     </Target>
 
 
-    <Target Name="Bundle">
+    <Target Name="Bundle"
+        Condition="'$(IsTestProject)' == ''">
+        
         <ResolvePackagesTask PackageJsonFilePath="$(PackageJsonFilePath)" ExportedOnly="true">
             <Output ItemName="_ExportedPackage" TaskParameter="ResolvedPackages"/>
         </ResolvePackagesTask>
