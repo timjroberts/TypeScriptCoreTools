@@ -3,8 +3,7 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-pool:
-  vmImage: 'Ubuntu 16.04'
+name: $(version.major).$(version.minor).$(version.patch)-alpha$(buildcount)
 
 variables:
   MajorVersion: $(version.major)
@@ -13,10 +12,20 @@ variables:
   BuildCount: $[counter('buildcount', 5)]
   NugetKey: $(key.nuget)
 
-name: $(version.major).$(version.minor).$(version.patch)-alpha$(buildcount)
+jobs:
+- job: InstallPrereqs
+  displayName: 'Install Build Pre-requisites'
+  steps:
+  - task: DotNetCoreInstaller@0
+    inputs:
+      packageType: 'sdk'
+      version: '2.1.403'
 
-steps:
-- script: dotnet msbuild build/build.proj /p:MajorVersion=$MAJORVERSION /p:MinorVersion=$MINORVERSION /p:PatchVersion=$PATCHVERSION /p:VersionSuffix=alpha$BUILDCOUNT /p:NuGetApiKey=$NUGETKEY
-  displayName: 'Build and Publish'
-  env:
-    NUGETKEY: $(NugetKey)
+- job: Build
+  dependsOn: InstallPrereqs
+  displayName: 'Build and Publish TypeScript Core Tools'
+  steps:
+  - script: dotnet msbuild build/build.proj /p:MajorVersion=$MAJORVERSION /p:MinorVersion=$MINORVERSION /p:PatchVersion=$PATCHVERSION /p:VersionSuffix=alpha$BUILDCOUNT /p:NuGetApiKey=$NUGETKEY
+    displayName: 'Build and Publish'
+    env:
+      NUGETKEY: $(NugetKey)

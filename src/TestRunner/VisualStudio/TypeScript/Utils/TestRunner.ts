@@ -32,6 +32,7 @@ export class TestRunner
                 config: "{}",
                 resolver: "typescript-sdk-jest-resolver",
                 runInBand: true,
+                testRegex: jsFilePath,
                 runTestsByPath: [ jsFilePath ],
                 testNamePattern: new RegExp(`^${groupedTestCase.testCases.map(t => t.fullyQualifiedName).map(t => TestRunner.GetNamePattern(t)).join('|')}$`),
                 silent: true,

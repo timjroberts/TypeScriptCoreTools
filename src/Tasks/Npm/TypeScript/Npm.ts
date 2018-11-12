@@ -44,6 +44,15 @@ function ResolveTypesPackageDirectoryPath(typesPackageName: string): string
         : "";
 }
 
+function NormalizeIndexFileName(fileName: string, expectedExtension: string): string
+{
+    if (!fileName) return undefined;
+
+    return fileName.endsWith(expectedExtension)
+        ? fileName
+        : fileName + expectedExtension;
+}
+
 function ResolvePackage(packageName: string): ResolvedPackage
 {
     try
@@ -78,7 +87,7 @@ function ResolvePackage(packageName: string): ResolvedPackage
 
         var typesIndexFilePath = path.join(
             packageRootDirectoryPath.dir,
-            packageObj["types"] || packageObj["typings"] || "./index.d.ts"
+            NormalizeIndexFileName(packageObj["types"], ".d.ts") || NormalizeIndexFileName(packageObj["typings"], ".d.ts") || "./index.d.ts"
         );
 
         var typesRootDirectoryPath = fs.existsSync(typesIndexFilePath)

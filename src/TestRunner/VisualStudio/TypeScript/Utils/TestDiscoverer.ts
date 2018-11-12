@@ -131,7 +131,7 @@ export class TestDiscoverer
             .map(file => path.parse(file))
             .find(file => file.ext === ".csproj");
 
-        let packageName = rootProjectFile.name.toLocaleLowerCase();
+        let packageName = rootProjectFile.name.replace(/\./g, "-").toLocaleLowerCase();
 
         TestDiscoverer.PackageNameCache.set(rootPath, packageName);
 
