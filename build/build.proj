@@ -60,6 +60,6 @@
 		</ItemGroup>
 
 		<MakeDir Condition="'$(IsDesktopBuild)' == 'true' And !Exists('$(LocalPackageFolderPath)')" Directories="$(LocalPackageFolderPath)" />
-		<Exec Command="dotnet nuget push '%(Package.Identity)' --source '$(NuGetTarget)'" />
+		<Exec Command="dotnet nuget push '%(Package.Identity)' --source '$(NuGetTarget)' --api-key $(NuGetApiKey)" />
 	</Target>
 </Project>

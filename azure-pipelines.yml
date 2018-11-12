@@ -7,13 +7,19 @@ pool:
   vmImage: 'Ubuntu 16.04'
 
 variables:
-  nugetkey: string
+  MajorVersion: $(version.major)
+  MinorVersion: $(version.minor)
+  PatchVersion: $(version.patch)
+  BuildCount: $[counter('buildcount', 5)]
+  NugetKey: $(key.nuget)
+
+name: $(version.major).$(version.minor).$(version.patch)-alpha$(buildcount)
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- script: npm install -g typescript@latest
+  displayName: 'Install TypeScript'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- script: dotnet msbuild build/build.proj /p:MajorVersion=$MAJORVERSION /p:MinorVersion=$MINORVERSION /p:PatchVersion=$PATCHVERSION /p:VersionSuffix=alpha$BUILDCOUNT /p:NuGetApiKey=$NUGETKEY
+  displayName: 'Build and Publish'
+  env:
+    NUGETKEY: $(NugetKey)
