@@ -23,7 +23,7 @@
         This target invokes the TypeScript compiler.
         -->
     <Target Name="CompileTypeScript" BeforeTargets="BeforeBuild">
-        <Exec Command="tsc $(MSBuildProjectDirectory)/TypeScript/WebPack.ts --outDir Scripts --removeComments --lib ES2015" />
+        <Exec Command="npx -p typescript@latest tsc $(MSBuildProjectDirectory)/TypeScript/WebPack.ts --outDir Scripts --removeComments --lib ES2015" />
     </Target>
 
     <!--

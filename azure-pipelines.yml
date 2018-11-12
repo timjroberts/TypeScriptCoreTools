@@ -16,9 +16,6 @@ variables:
 name: $(version.major).$(version.minor).$(version.patch)-alpha$(buildcount)
 
 steps:
-- script: npm install -g typescript@latest
-  displayName: 'Install TypeScript'
-
 - script: dotnet msbuild build/build.proj /p:MajorVersion=$MAJORVERSION /p:MinorVersion=$MINORVERSION /p:PatchVersion=$PATCHVERSION /p:VersionSuffix=alpha$BUILDCOUNT /p:NuGetApiKey=$NUGETKEY
   displayName: 'Build and Publish'
   env:

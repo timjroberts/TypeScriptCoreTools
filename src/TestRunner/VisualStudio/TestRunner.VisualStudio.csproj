@@ -36,7 +36,7 @@
         This target invokes the TypeScript compiler.
         -->
     <Target Name="CompileTypeScript" BeforeTargets="BeforeBuild">
-        <Exec Command="tsc --outDir ../Scripts --removeComments" WorkingDirectory="$(MSBuildProjectDirectory)/TypeScript" />
+        <Exec Command="npx -p typescript@latest tsc --outDir ../Scripts --removeComments" WorkingDirectory="$(MSBuildProjectDirectory)/TypeScript" />
     </Target>
 
     <!--

@@ -17,8 +17,8 @@
   </Target>
 
   <Target Name="CompileTypeScript" BeforeTargets="BeforeBuild">
-    <Exec Command="tsc $(MSBuildProjectDirectory)/TypeScript/Bios.ts --outDir Scripts --removeComments --lib ES2015" />
-    <Exec Command="tsc $(MSBuildProjectDirectory)/TypeScript/Resolver.ts --outDir Scripts --removeComments --lib ES2015" />
+    <Exec Command="npx -p typescript@latest tsc $(MSBuildProjectDirectory)/TypeScript/Bios.ts --outDir Scripts --removeComments --lib ES2015" />
+    <Exec Command="npx -p typescript@latest tsc $(MSBuildProjectDirectory)/TypeScript/Resolver.ts --outDir Scripts --removeComments --lib ES2015" />
   </Target>
 
   <ItemGroup>
