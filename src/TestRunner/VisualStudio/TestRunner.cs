@@ -63,13 +63,13 @@ namespace TypeScript.Sdk.TestRunner.VisualStudio
                 foreach (var resultObj in results)
                 {
                     var resultTestCase = testCases.First(testCase => string.Equals(testCase.FullyQualifiedName, (string)resultObj["testCase"]["fullyQualifiedName"], StringComparison.CurrentCulture));
-                    var result = new TestResult(resultTestCase);
-
-                    result.Outcome = string.Equals((string)resultObj["outcome"], "passed", StringComparison.CurrentCulture)
-                        ? TestOutcome.Passed
-                        : TestOutcome.Failed;
-
-                    result.ErrorMessage = (string)resultObj["errorMessage"];
+                    var result = new TestResult(resultTestCase)
+                    {
+                        Outcome = string.Equals((string)resultObj["outcome"], "passed", StringComparison.CurrentCulture)
+                            ? TestOutcome.Passed
+                            : TestOutcome.Failed,
+                        ErrorMessage = (string)resultObj["errorMessage"]
+                    };
 
                     frameworkHandle.RecordResult(result);
                 }
