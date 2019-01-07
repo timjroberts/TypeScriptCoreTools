@@ -25,7 +25,9 @@ jobs:
   dependsOn: InstallPrereqs
   displayName: 'Build and Publish TypeScript Core Tools'
   steps:
-  - script: dotnet msbuild build/build.proj /p:MajorVersion=$MAJORVERSION /p:MinorVersion=$MINORVERSION /p:PatchVersion=$PATCHVERSION /p:VersionSuffix=alpha$BUILDCOUNT /p:NuGetApiKey=$NUGETKEY
-    displayName: 'Build and Publish'
-    env:
-      NUGETKEY: $(NugetKey)
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: custom
+      custom: msbuild
+      projects: build/build.proj
+      arguments: /p:MajorVersion=$(MajorVersion) /p:MinorVersion=$(MinorVersion) /p:PatchVersion=$(PatchVersion) /p:VersionSuffix=alpha$(BuildCount) /p:NuGetApiKey=$(NugetKey)
